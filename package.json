@@ -1,0 +1,24 @@
+{
+  "name": "world-cup-simulator",
+  "private": true,
+  "version": "1.0.0",
+  "workspaces": [
+    "shared",
+    "backend",
+    "frontend",
+    "data-pipeline"
+  ],
+  "scripts": {
+    "build:shared": "npm run build -w shared",
+    "build:backend": "npm run build -w backend",
+    "build:frontend": "npm run build -w frontend",
+    "build:pipeline": "npm run build -w data-pipeline",
+    "build": "npm run build -w shared && npm run build -w backend && npm run build -w frontend && npm run build -w data-pipeline",
+    "dev:backend": "npm run dev -w backend",
+    "dev:frontend": "npm run dev -w frontend",
+    "test": "npm run test -w shared"
+  },
+  "devDependencies": {
+    "typescript": "^5.3.3"
+  }
+}
