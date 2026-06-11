@@ -1136,10 +1136,10 @@ function handlePlayerDecisions(state) {
         const defender = pressers[0];
         // Check for a foul first
         const foulRoll = Math.random();
-        const foulThreshold = 0.003 + (state.refereeStrictness * 0.002) + (100 - defender.attributes.decisions) / 10000;
+        const foulThreshold = 0.0035 + (state.refereeStrictness * 0.0022) + (100 - defender.attributes.decisions) / 10000;
         if (foulRoll < foulThreshold) {
-            // 88% chance defender fouls ball owner, 12% chance ball owner commits offensive foul
-            if (Math.random() < 0.12) {
+            // 95% chance defender fouls ball owner, 5% chance ball owner commits offensive foul
+            if (Math.random() < 0.05) {
                 executeFoul(state, owner, defender); // Attacking player commits offensive foul
             }
             else {
