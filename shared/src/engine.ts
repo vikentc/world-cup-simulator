@@ -1782,7 +1782,6 @@ function executeFoul(state: MatchSimulationState, defender: PlayerOnPitchState, 
   const victimInjuryChance = 0.002 + (1.4 - (victim.attributes.strength / 100)) * 0.002 + (100 - victim.staminaState) / 100000;
   if (Math.random() < victimInjuryChance) {
     triggerInjury(state, victim, 'foul');
-    return;
   }
 
   const minute = Math.floor(state.elapsedSeconds / 60);
