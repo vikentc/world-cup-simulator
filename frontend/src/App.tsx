@@ -286,7 +286,7 @@ export default function App() {
             {/* Core Scoreboard */}
             <div className="scoreboard-container">
               <div className="scoreboard-team home">
-                <span style={{ fontSize: '1.45rem', fontWeight: '800', fontFamily: 'var(--font-display)', whiteSpace: 'nowrap' }}>
+                <span className="scoreboard-team-name">
                   {activeMatchState.homeTeam.name}
                 </span>
                 <img
@@ -306,7 +306,7 @@ export default function App() {
                   alt={activeMatchState.awayTeam.name}
                   style={{ width: '50px', height: '33px', objectFit: 'cover', borderRadius: '4px', border: '1px solid rgba(255,255,255,0.25)', boxShadow: '0 2px 8px rgba(0,0,0,0.4)' }}
                 />
-                <span style={{ fontSize: '1.45rem', fontWeight: '800', fontFamily: 'var(--font-display)', whiteSpace: 'nowrap' }}>
+                <span className="scoreboard-team-name">
                   {activeMatchState.awayTeam.name}
                 </span>
               </div>

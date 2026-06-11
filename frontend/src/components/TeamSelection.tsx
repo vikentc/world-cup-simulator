@@ -182,7 +182,7 @@ export default function TeamSelection({ onStartMatch, onStartTournament }: TeamS
         </div>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 340px', gap: '30px', alignItems: 'start' }}>
+      <div className="team-selection-grid">
         
         {/* Matchup Dashboard (Primary Focus) */}
         <div className="glass-panel" style={{ display: 'flex', flexDirection: 'column', gap: '24px', minHeight: '520px', justifyContent: 'space-between', padding: '24px' }}>
@@ -190,7 +190,7 @@ export default function TeamSelection({ onStartMatch, onStartTournament }: TeamS
             ⚽ Setup Matchup
           </h3>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr auto 1fr', gap: '24px', alignItems: 'center', width: '100%' }}>
+          <div className="matchup-setup-grid">
             
             {/* Home Side Card */}
             <div style={{

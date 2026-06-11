@@ -210,7 +210,7 @@ export default function StatsPanel({ state }: StatsPanelProps) {
 
       {activeTab === 'boxscore' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
+          <div className="stats-summary-grid">
             {/* Home Team Column */}
             <div className="glass-panel" style={{ padding: '24px', borderTop: `4px solid ${homeTeam.colorPrimary || '#06b6d4'}` }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '20px' }}>
@@ -356,7 +356,7 @@ export default function StatsPanel({ state }: StatsPanelProps) {
           <div className="glass-panel" style={{ padding: '24px' }}>
             <h4 style={{ fontSize: '1.1rem', fontWeight: 'bold', fontFamily: 'var(--font-display)', marginBottom: '16px', textAlign: 'center', borderBottom: '1px solid rgba(255,255,255,0.06)', paddingBottom: '8px' }}>Set Pieces & Fouls</h4>
             
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '24px', textAlign: 'center', marginTop: '10px' }}>
+            <div className="set-pieces-grid">
               <div>
                 <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', textTransform: 'uppercase', fontWeight: 'bold', letterSpacing: '0.05em', marginBottom: '6px' }}>Corners</div>
                 <div style={{ fontSize: '1.75rem', fontWeight: '800', fontFamily: 'var(--font-display)' }}>
@@ -415,7 +415,7 @@ export default function StatsPanel({ state }: StatsPanelProps) {
       )}
 
       {activeTab === 'stamina' && (
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
+        <div className="squads-sbs-grid">
           {/* Home team list */}
           <div className="glass-panel" style={{ padding: '24px' }}>
             <div style={{ fontSize: '0.9rem', fontWeight: 'bold', color: '#06b6d4', marginBottom: '12px', textTransform: 'uppercase', borderBottom: '1px solid rgba(255,255,255,0.06)', paddingBottom: '6px' }}>{homeTeam.name}</div>

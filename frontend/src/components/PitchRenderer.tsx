@@ -1465,9 +1465,9 @@ export default function PitchRenderer({ state }: PitchRendererProps) {
   }, []);
 
   return (
-    <div style={{ position: 'relative', width: '1000px', margin: '0 auto', borderRadius: '16px', overflow: 'hidden', border: '3px solid rgba(255,255,255,0.08)', boxShadow: '0 10px 40px rgba(0,0,0,0.6)' }}>
+    <div style={{ position: 'relative', width: '100%', maxWidth: '1000px', margin: '0 auto', borderRadius: '16px', overflow: 'hidden', border: '3px solid rgba(255,255,255,0.08)', boxShadow: '0 10px 40px rgba(0,0,0,0.6)' }}>
       {/* Pixi Canvas Mounting Container */}
-      <div ref={containerRef} style={{ width: '1000px', height: '744px' }} />
+      <div ref={containerRef} className="pixi-canvas-wrapper" style={{ width: '100%' }} />
     </div>
   );
 }

@@ -1295,7 +1295,12 @@ function handlePlayerDecisions(state: MatchSimulationState) {
     const foulRoll = Math.random();
     const foulThreshold = 0.003 + (state.refereeStrictness * 0.002) + (100 - defender.attributes.decisions) / 10000;
     if (foulRoll < foulThreshold) {
-      executeFoul(state, defender, owner);
+      // 88% chance defender fouls ball owner, 12% chance ball owner commits offensive foul
+      if (Math.random() < 0.12) {
+        executeFoul(state, owner, defender); // Attacking player commits offensive foul
+      } else {
+        executeFoul(state, defender, owner); // Defending player commits defensive foul
+      }
       return;
     }
     
@@ -1790,6 +1795,9 @@ function executeFoul(state: MatchSimulationState, defender: PlayerOnPitchState, 
     state.stats.foulsAway++;
   }
 
+  // Determine if it is an offensive foul (committed by the player holding or having last touched the ball)
+  const isOffensive = state.ball.ownerId === defender.playerId || state.ball.lastTouchId === defender.playerId;
+
   state.events.push({
     id: evId,
     type: 'FOUL',
@@ -1801,10 +1809,16 @@ function executeFoul(state: MatchSimulationState, defender: PlayerOnPitchState, 
     targetPlayerId: victim.playerId,
     x: victim.pos.x,
     y: victim.pos.y,
-    details: `Foul by ${defender.name} on ${victim.name}.`,
+    details: isOffensive
+      ? `Offensive foul by ${defender.name} on ${victim.name}.`
+      : `Foul by ${defender.name} on ${victim.name}.`,
   });
 
-  addCommentary(state, 'FOUL', `Foul! ${defender.name} trips ${victim.name}.`);
+  if (isOffensive) {
+    addCommentary(state, 'FOUL', `Offensive foul! ${defender.name} pushes off ${victim.name} illegally.`);
+  } else {
+    addCommentary(state, 'FOUL', `Foul! ${defender.name} trips ${victim.name}.`);
+  }
 
   // Card checks
   const yellowRoll = Math.random();
@@ -1819,10 +1833,13 @@ function executeFoul(state: MatchSimulationState, defender: PlayerOnPitchState, 
     showYellowCard(state, defender);
   }
 
-  // Check if foul is in the box
-  const inBox = defender.teamId === state.homeTeam.id
-    ? (victim.pos.x <= 16.5 && victim.pos.y >= 13.85 && victim.pos.y <= 54.15)
-    : (victim.pos.x >= 88.5 && victim.pos.y >= 13.85 && victim.pos.y <= 54.15);
+  // Check if foul is in the box (only if the defending team committed the foul in their own box)
+  let inBox = false;
+  if (!isOffensive) {
+    inBox = defender.teamId === state.homeTeam.id
+      ? (victim.pos.x <= 16.5 && victim.pos.y >= 13.85 && victim.pos.y <= 54.15)
+      : (victim.pos.x >= 88.5 && victim.pos.y >= 13.85 && victim.pos.y <= 54.15);
+  }
 
   state.ball.ownerId = null; // Ball is free
   state.ball.vel = { x: 0, y: 0 };

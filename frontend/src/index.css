@@ -372,3 +372,140 @@ h1, h2, h3, h4, h5, h6 {
   color: var(--glow-cyan);
   font-weight: 600;
 }
+
+/* Responsive Grid Systems and Utilities */
+.pixi-canvas-wrapper canvas {
+  width: 100% !important;
+  height: auto !important;
+  display: block;
+}
+
+.scoreboard-team-name {
+  font-size: 1.45rem;
+  font-weight: 800;
+  font-family: var(--font-display);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
+}
+
+.team-selection-grid {
+  display: grid;
+  grid-template-columns: 1fr 340px;
+  gap: 30px;
+  align-items: start;
+}
+
+.matchup-setup-grid {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  gap: 24px;
+  align-items: center;
+  width: 100%;
+}
+
+.stats-summary-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+}
+
+.set-pieces-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 24px;
+  text-align: center;
+  margin-top: 10px;
+}
+
+.squads-sbs-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+}
+
+/* Media Queries for Tablet and Mobile Scaling */
+@media (max-width: 992px) {
+  .team-selection-grid {
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
+}
+
+@media (max-width: 768px) {
+  html {
+    font-size: 16px; /* Decrease base font size on tablet */
+  }
+  .scoreboard-container {
+    padding: 16px 20px;
+  }
+  .scoreboard-team {
+    width: 30%;
+    gap: 8px;
+  }
+  .scoreboard-team-name {
+    font-size: 1.15rem;
+  }
+  .scoreboard-score-box {
+    font-size: 1.8rem;
+    padding: 8px 16px;
+  }
+  .scoreboard-clock {
+    font-size: 1.4rem;
+  }
+  .stats-summary-grid,
+  .squads-sbs-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+}
+
+@media (max-width: 640px) {
+  .matchup-setup-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+    justify-items: center;
+  }
+}
+
+@media (max-width: 600px) {
+  .set-pieces-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+}
+
+@media (max-width: 500px) {
+  html {
+    font-size: 14px; /* Decrease base font size on mobile */
+  }
+  .scoreboard-container {
+    flex-wrap: wrap;
+    gap: 12px;
+    justify-content: center;
+    padding: 12px 16px;
+  }
+  .scoreboard-team {
+    width: 45%;
+    gap: 6px;
+  }
+  .scoreboard-team.home {
+    order: 1;
+  }
+  .scoreboard-team.away {
+    order: 3;
+  }
+  .scoreboard-score-box {
+    order: 2;
+    font-size: 1.5rem;
+    padding: 6px 12px;
+    margin: 0 8px;
+  }
+  .scoreboard-timer {
+    order: 4;
+    width: 100%;
+    margin-top: 8px;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+    padding-top: 8px;
+  }
+}
