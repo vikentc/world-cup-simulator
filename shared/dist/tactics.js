@@ -164,12 +164,35 @@ export function getTacticalTargetPosition(role, formation, isHome, ballPos, tact
             x += (dLineShift + pressingShift) * 0.5;
         }
     }
+    // Normalized ball X in team's attacking perspective (0 is own goal line, 105 is opponent's goal line)
+    const normBallX = isHome ? ballPos.x : 105 - ballPos.x;
+    // Defenders push up high during attack to support midfield/attack
+    if (isAttacking) {
+        const isDefender = role === 'LB' || role === 'RB' || role === 'LCB' || role === 'RCB' || role === 'CB';
+        if (isDefender) {
+            const defenderPush = Math.max(0, (normBallX - 52.5) * 0.35);
+            x += defenderPush;
+        }
+    }
+    // Strikers drop back deep during defense to support midfield/defense
+    if (!isAttacking && !isTransition) {
+        const isForward = role === 'LW' || role === 'RW' || role === 'ST' || role === 'LST' || role === 'RST';
+        if (isForward) {
+            const forwardDrop = Math.max(0, (52.5 - normBallX) * 0.38);
+            x -= forwardDrop;
+        }
+    }
     // Cap initial values
     x = Math.max(8, Math.min(95, x));
     // 2. Ball-relative shifting (team block follows the ball)
     // Shift factor: how much the team slides to follow the ball
-    const ballShiftX = (ballPos.x - 52.5) * 0.35;
-    const ballShiftY = (ballPos.y - 34) * 0.25;
+    let ballShiftX = (ballPos.x - 52.5) * 0.48; // was 0.35
+    let ballShiftY = (ballPos.y - 34) * 0.32; // was 0.25
+    // If transition or loose ball, reduce shifting so players reset closer to base formation
+    if (possessionTeamId === null) {
+        ballShiftX *= 0.5;
+        ballShiftY *= 0.5;
+    }
     let finalX = x + ballShiftX;
     let finalY = y + ballShiftY;
     // Goalkeeper specific placement (narrowing angles, positioned on the shot line)
