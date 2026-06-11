@@ -1,0 +1,4 @@
+{
+  "buildCommand": "npm run build:shared && npm run build:frontend",
+  "outputDirectory": "frontend/dist"
+}
