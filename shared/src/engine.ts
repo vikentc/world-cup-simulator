@@ -1293,7 +1293,16 @@ function handlePlayerDecisions(state: MatchSimulationState) {
 
     // Check for a foul first
     const foulRoll = Math.random();
-    const foulThreshold = 0.0035 + (state.refereeStrictness * 0.0022) + (100 - defender.attributes.decisions) / 10000;
+    const inAttackingHalf = attackingRight ? owner.pos.x > 52.5 : owner.pos.x < 52.5;
+    const inAttackingThird = attackingRight ? owner.pos.x > 70.0 : owner.pos.x < 35.0;
+    
+    let foulThreshold = 0.0035 + (state.refereeStrictness * 0.0022) + (100 - defender.attributes.decisions) / 10000;
+    if (inAttackingThird) {
+      foulThreshold *= 1.8; // defenders take desperate risks near their own box
+    } else if (inAttackingHalf) {
+      foulThreshold *= 1.3;
+    }
+
     if (foulRoll < foulThreshold) {
       // 95% chance defender fouls ball owner, 5% chance ball owner commits offensive foul
       if (Math.random() < 0.05) {
