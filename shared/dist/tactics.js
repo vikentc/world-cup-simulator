@@ -172,10 +172,29 @@ export function getTacticalTargetPosition(role, formation, isHome, ballPos, tact
     const ballShiftY = (ballPos.y - 34) * 0.25;
     let finalX = x + ballShiftX;
     let finalY = y + ballShiftY;
-    // Goalkeeper specific placement
+    // Goalkeeper specific placement (narrowing angles, positioned on the shot line)
     if (role === 'GK') {
-        finalX = Math.max(3, Math.min(20, base.x + (ballPos.x * 0.12)));
-        finalY = 34 + (ballPos.y - 34) * 0.15;
+        // Math is done in home team's perspective (defending x = 0) and mirrored at the end of the function
+        const tempBallPos = isHome ? ballPos : { x: 105 - ballPos.x, y: 68 - ballPos.y };
+        const goalCenter = { x: 0, y: 34 };
+        const toBallX = tempBallPos.x - goalCenter.x;
+        const toBallY = tempBallPos.y - goalCenter.y;
+        const distToBall = Math.sqrt(toBallX * toBallX + toBallY * toBallY);
+        if (distToBall > 0.1) {
+            const dirX = toBallX / distToBall;
+            const dirY = toBallY / distToBall;
+            // Stand further out when ball is further away, up to ~7.5m max
+            const standOutDist = 1.8 + Math.min(5.7, distToBall * 0.12);
+            finalX = goalCenter.x + dirX * standOutDist;
+            finalY = goalCenter.y + dirY * standOutDist;
+        }
+        else {
+            finalX = goalCenter.x;
+            finalY = goalCenter.y;
+        }
+        // Confine to goalkeeper's box/defensive area boundaries
+        finalX = Math.max(1.5, Math.min(16.5, finalX));
+        finalY = Math.max(22.0, Math.min(46.0, finalY));
     }
     // 3. Keep within logical pitch bounds
     finalX = Math.max(2, Math.min(103, finalX));

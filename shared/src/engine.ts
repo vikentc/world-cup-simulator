@@ -1443,9 +1443,28 @@ function handlePlayerDecisions(state: MatchSimulationState) {
     return;
   }
 
+  // Check if the goal path is free (no defenders in a corridor between owner and goal center)
+  const oppsInPath = opponents.filter((opp) => {
+    if (opp.position === 'GK') return false;
+    const oppDistToPath = getDistanceToSegment(opp.pos, owner.pos, oppGoalCenter);
+    return oppDistToPath < 2.2; // corridor width of 2.2 meters
+  });
+  const isGoalPathFree = oppsInPath.length === 0;
+
+  // If path is free, willing to shoot from slightly further out if needed
+  if (isGoalPathFree && maxShotDist < 23) {
+    maxShotDist = 23;
+  }
+
   const inRange = attackingRight ? owner.pos.x > (105 - maxShotDist) : owner.pos.x < maxShotDist;
 
   if (inRange && distToGoal < maxShotDist) {
+    // If the goal path is free and player is inside the box, shoot with high probability!
+    if (isGoalPathFree && distToGoal < 18.0 && Math.random() < 0.28) {
+      executeShot(state, owner, oppGoalCenter, distToGoal);
+      return;
+    }
+
     // If player is on a solo dribble run and enters the box, shoot immediately!
     if (owner.isSoloDribble && distToGoal < 16.5 && Math.random() < 0.90) {
       executeShot(state, owner, oppGoalCenter, distToGoal);
@@ -1480,11 +1499,13 @@ function handlePlayerDecisions(state: MatchSimulationState) {
     // Scale by team tempo (higher tempo = quicker decisions to shoot)
     shotChance *= (0.7 + (tactics.tempo / 100) * 0.6);
 
-    // Boost shot probability during active solo breakout runs OR high possibility chances
+    // Boost shot probability during active solo breakout runs OR high possibility chances OR when goal path is free
     if (owner.isSoloDribble) {
       shotChance *= 3.0;
     } else if (isHighPossibility) {
       shotChance *= 3.5; // massive shot chance boost for good players in prime position
+    } else if (isGoalPathFree && distToGoal < 22.0) {
+      shotChance *= 2.2; // boost when goal path is free
     }
 
     // Mental ceiling / momentum control: scale down shot chance if winning heavily
@@ -1507,11 +1528,13 @@ function handlePlayerDecisions(state: MatchSimulationState) {
       }
       decisionThreshold -= (eloDiff / 1000) * 0.20;
 
-      // Lower composure threshold during active solo breakout runs OR high possibility chances
+      // Lower composure threshold during active solo breakout runs OR high possibility chances OR when goal path is free
       if (owner.isSoloDribble) {
         decisionThreshold *= 0.5;
       } else if (isHighPossibility) {
         decisionThreshold *= 0.45;
+      } else if (isGoalPathFree && distToGoal < 22.0) {
+        decisionThreshold *= 0.65;
       }
       
       if (Math.random() * (owner.attributes.decisions / 100) > (1 - baseShotUtility) * decisionThreshold) {
@@ -2158,7 +2181,7 @@ function executePass(state: MatchSimulationState, passer: PlayerOnPitchState, re
   const eloProb = 1 / (1 + 10 ** ((oppTeam.eloRating - passingTeam.eloRating) / 400));
 
   // Roll for pass blunder/unforced mistake (higher chance for weaker players)
-  let blunderChance = 0.008 + (100 - passingAttr) * 0.0003;
+  let blunderChance = (0.008 + (100 - passingAttr) * 0.0003) * 0.6;
   if (passingTeam.tactics.style === 'Possession') {
     blunderChance *= 0.6;
   }
@@ -2197,7 +2220,7 @@ function executePass(state: MatchSimulationState, passer: PlayerOnPitchState, re
   }
 
   // Base error scales up for weaker players
-  const baseError = Math.max(0.08, (1.8 - passingAttr / 50)); 
+  const baseError = Math.max(0.05, (1.25 - passingAttr / 70)); 
   const eloErrorFactor = 1.5 - eloProb * 0.8; // Toned down ELO pass error gap
 
   // Pressure factor (opponents nearby)
@@ -2463,7 +2486,16 @@ function executeShot(state: MatchSimulationState, shooter: PlayerOnPitchState, g
       if (isPenalty) {
         saveChance = 0.18 + (gk.attributes.gkReflexes / 100) * 0.1 - (shooter.attributes.composure / 100) * 0.08;
       } else {
-        saveChance = (gkSaveSkill / 100) * (1.25 - xG * 0.80); // GK has lower chance to save high xG shots
+        // Base save chance is balanced to compensate for GK's improved positioning
+        saveChance = (gkSaveSkill / 100) * (1.12 - xG * 0.75);
+        
+        // Positioning bonus: up to 12% boost if GK is close to the shot line
+        const distToShotLine = getDistanceToSegment(gk.pos, shooter.pos, targetPos);
+        let positioningBonus = 1.0;
+        if (distToShotLine < 2.5) {
+          positioningBonus = 1.0 + (1.0 - distToShotLine / 2.5) * 0.12 * (gk.attributes.gkPositioning / 100);
+        }
+        saveChance *= positioningBonus;
       }
 
       // Scale save chance by ELO difference and luck
