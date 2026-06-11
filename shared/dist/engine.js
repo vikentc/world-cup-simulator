@@ -1375,6 +1375,7 @@ function handlePlayerDecisions(state) {
     // Find open teammates
     const teammates = state.players.filter((p) => p.teamId === owner.teamId && p.playerId !== owner.playerId);
     const passingOptions = [];
+    let hasTriangleOption = false;
     teammates.forEach((tm) => {
         const d = Vector.dist(tm.pos, owner.pos);
         if (d > 5 && d < 35) {
@@ -1391,6 +1392,20 @@ function handlePlayerDecisions(state) {
             let score = (safetyScore + progressScore) * (tm.attributes.positioning / 100);
             if (tm.position === 'GK') {
                 score *= 0.20; // heavily penalize pass-backs to the GK
+            }
+            // Check if this pass option forms a triangle with another teammate (vertices roughly 5m to 22m apart)
+            const formsTriangle = teammates.some((other) => {
+                if (other.playerId === tm.playerId)
+                    return false;
+                if (other.position === 'GK')
+                    return false; // GK doesn't count for passing triangles
+                const distToOwner = Vector.dist(other.pos, owner.pos);
+                const distToTarget = Vector.dist(other.pos, tm.pos);
+                return distToOwner > 5 && distToOwner < 22 && distToTarget > 5 && distToTarget < 22;
+            });
+            if (formsTriangle && score > 0.2) {
+                score *= 1.4; // 40% bonus for triangle passing options
+                hasTriangleOption = true;
             }
             if (score > 0.2) {
                 passingOptions.push({ player: tm, score });
@@ -1414,6 +1429,10 @@ function handlePlayerDecisions(state) {
     let passChanceThreshold = (underPressure ? 0.45 : 0.08) * dribbleEagerness;
     if (isSpecialist) {
         passChanceThreshold = (underPressure ? 0.70 : 0.22) * (0.4 + dribbleEagerness * 0.6); // pass much more readily!
+    }
+    // If a triangle passing option is available, boost pass probability to encourage Tiki-Taka!
+    if (hasTriangleOption) {
+        passChanceThreshold *= 1.8;
     }
     if (passingOptions.length > 0 && Math.random() < passChanceThreshold) {
         // Pass
@@ -2046,9 +2065,29 @@ function executePass(state, passer, receiver) {
             state.stats.passesCompletedAway++;
     }
     const passType = isThroughBall ? 'THROUGH_BALL' : 'PASS';
-    addCommentary(state, passType, isThroughBall
+    const teammates = state.players.filter((p) => p.teamId === passer.teamId && p.playerId !== passer.playerId);
+    const formsTriangle = teammates.some((other) => {
+        if (other.playerId === receiver.playerId)
+            return false;
+        if (other.position === 'GK')
+            return false;
+        const distToOwner = Vector.dist(other.pos, passer.pos);
+        const distToTarget = Vector.dist(other.pos, receiver.pos);
+        return distToOwner > 5 && distToOwner < 22 && distToTarget > 5 && distToTarget < 22;
+    });
+    let commText = isThroughBall
         ? `${passer.name} slides a beautiful through ball looking for ${receiver.name}.`
-        : `${passer.name} passes the ball wide to ${receiver.name}.`);
+        : `${passer.name} passes the ball wide to ${receiver.name}.`;
+    if (!isThroughBall && formsTriangle && Math.random() < 0.22) {
+        const teamName = passingTeam.name;
+        const triangleComments = [
+            `Quick triangle play! ${passer.name} and ${receiver.name} exchange sharp passes.`,
+            `Beautiful Tiki-Taka sequence! ${teamName} works a neat passing triangle in midfield.`,
+            `${passer.name} plays it quick, maintaining the triangle flow with ${receiver.name}.`
+        ];
+        commText = triangleComments[Math.floor(Math.random() * triangleComments.length)];
+    }
+    addCommentary(state, passType, commText);
     passer.staminaState = Math.max(5, passer.staminaState - 0.4);
 }
 /**
