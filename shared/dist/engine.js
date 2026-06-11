@@ -1455,10 +1455,10 @@ function handlePlayerDecisions(state) {
             addCommentary(state, 'DRIBBLE', soloCommentaries[Math.floor(Math.random() * soloCommentaries.length)]);
         }
         let runSpeed = 4;
-        let wanderSpread = 0.4;
+        let wanderSpread = 0.7; // increased for more natural sideways sway
         if (isSolo) {
             runSpeed = 6.5; // faster drive
-            wanderSpread = 0.2; // more direct towards goal mouth
+            wanderSpread = 0.35; // slightly wider solo runs too
             if (owner.soloDribbleTicks && owner.soloDribbleTicks > 0) {
                 owner.soloDribbleTicks--;
                 if (owner.soloDribbleTicks === 0) {
@@ -1473,10 +1473,38 @@ function handlePlayerDecisions(state) {
             }
         }
         const goalDir = Vector.direction(owner.pos, oppGoalCenter);
-        const wanderDir = { x: goalDir.x, y: goalDir.y + (Math.random() - 0.5) * wanderSpread };
-        owner.targetPos = Vector.add(owner.pos, Vector.mult(Vector.normalize(wanderDir), runSpeed));
+        let runDir = goalDir;
+        // Check for nearby opponents directly in front of the runner (cone of ~50 degrees)
+        const nearbyOpponents = opponents.filter((opp) => {
+            const dist = Vector.dist(opp.pos, owner.pos);
+            if (dist > 6.0)
+                return false;
+            const toOpp = Vector.direction(owner.pos, opp.pos);
+            const dot = goalDir.x * toOpp.x + goalDir.y * toOpp.y;
+            return dot > 0.6;
+        });
+        if (nearbyOpponents.length > 0) {
+            // Opponent in front! Make a sideways cut to avoid them
+            const nearestOpp = nearbyOpponents.sort((a, b) => Vector.distSq(a.pos, owner.pos) - Vector.distSq(b.pos, owner.pos))[0];
+            const ortho1 = { x: -goalDir.y, y: goalDir.x };
+            const ortho2 = { x: goalDir.y, y: -goalDir.x };
+            const t1 = Vector.add(owner.pos, Vector.mult(ortho1, 3));
+            const t2 = Vector.add(owner.pos, Vector.mult(ortho2, 3));
+            const d1 = Vector.distSq(t1, nearestOpp.pos);
+            const d2 = Vector.distSq(t2, nearestOpp.pos);
+            const cutDir = d1 > d2 ? ortho1 : ortho2;
+            // Blend 60% sideways cut with 40% forward progression
+            runDir = Vector.normalize(Vector.add(Vector.mult(cutDir, 0.60), Vector.mult(goalDir, 0.40)));
+            // Set a slightly smaller decision cooldown to react to the cut step sooner
+            owner.decisionCooldown = 3 + Math.floor(Math.random() * 3);
+        }
+        else {
+            // Normal wander: randomize slightly sideways with wider spread
+            runDir = Vector.normalize({ x: goalDir.x, y: goalDir.y + (Math.random() - 0.5) * wanderSpread });
+        }
+        owner.targetPos = Vector.add(owner.pos, Vector.mult(runDir, runSpeed));
         // Move ball with player
-        const offset = Vector.mult(Vector.normalize(wanderDir), 0.5);
+        const offset = Vector.mult(runDir, 0.5);
         ball.pos = Vector.add(owner.pos, offset);
         ball.vel = { x: 0, y: 0 };
         ball.height = 0;
